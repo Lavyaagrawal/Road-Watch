@@ -88,8 +88,19 @@ function initializeSQLiteDatabase() {
 app.get('/api/issues', async (req, res) => {
     try {
         if (isProd) {
-            const result = await dbClient.query('SELECT * FROM issues ORDER BY createdAt DESC');
-            res.json(result.rows);
+            const result = await dbClient.query('SELECT * FROM issues ORDER BY createdat DESC');
+            const mappedRows = result.rows.map(row => ({
+                id: row.id,
+                description: row.description,
+                type: row.type,
+                imageUrl: row.imageurl,   // Map lowercase back to camelCase
+                status: row.status,
+                userEmail: row.useremail, // Map lowercase back to camelCase
+                latitude: row.latitude,
+                longitude: row.longitude,
+                createdAt: row.createdat  // Map lowercase back to camelCase
+            }));
+            res.json(mappedRows);
         } else {
             dbClient.all('SELECT * FROM issues ORDER BY createdAt DESC', [], (err, rows) => {
                 if (err) return res.status(500).json({ error: err.message });
