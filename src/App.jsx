@@ -7,6 +7,9 @@ import Signup from "./pages/Signup";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
+import RoadInfo from "./pages/RoadInfo";
+import Transparency from "./pages/Transparency";
+
 function App() {
   return (
     <BrowserRouter>
@@ -15,8 +18,9 @@ function App() {
         <Route path="/report" element={<Report />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/login" element={<Login />} />
-
         <Route path="/signup" element={<Signup />} />
+        <Route path="/road-info" element={<RoadInfo />} />
+        <Route path="/transparency" element={<Transparency />} />
         <Route
           path="/dashboard"
           element={
@@ -29,8 +33,6 @@ function App() {
           path="/admin"
           element={<Admin />}
         />
-
-
       </Routes>
     </BrowserRouter>
   );

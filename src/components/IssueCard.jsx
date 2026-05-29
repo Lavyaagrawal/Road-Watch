@@ -1,109 +1,101 @@
-function IssueCard({ issue }) {
+import { Calendar, MapPin, ExternalLink, ShieldAlert, Award } from "lucide-react";
 
-    const statusColor = {
+function IssueCard({ issue, onViewDetails }) {
+    const statusColors = {
+        Pending: "bg-red-500/10 border-red-500/30 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.05)]",
+        "In Progress": "bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.05)]",
+        Resolved: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.05)]",
+    };
 
-        Pending: "bg-yellow-500",
+    const authorityColors = {
+        "Municipal Corporation": "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
+        "Public Works Department": "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
+        "Traffic Police": "bg-amber-500/10 border-amber-500/20 text-amber-400",
+        "Road Maintenance Department": "bg-sky-500/10 border-sky-500/20 text-sky-400",
+    };
 
-        "In Progress": "bg-blue-500",
+    const dateFormatted = new Date(issue.createdAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+    });
 
-        Resolved: "bg-green-500",
-
+    const handleClick = (e) => {
+        // Prevent click trigger if map link was clicked
+        if (e.target.closest("a")) return;
+        if (onViewDetails) onViewDetails(issue);
     };
 
     return (
-
-        <div className="
-      bg-slate-900
-      border
-      border-slate-800
-      rounded-3xl
-      overflow-hidden
-      shadow-2xl
-      hover:scale-[1.02]
-      transition
-      duration-300
-    ">
-
-            {/* IMAGE */}
-            <img
-                src={issue.imageUrl}
-                alt=""
-                className="
-          w-full
-          h-56
-          object-cover
-        "
-            />
-
-            <div className="p-6">
-
-                {/* TOP ROW */}
-                <div className="
-          flex
-          justify-between
-          items-center
-          mb-4
-        ">
-
-                    <h2 className="
-            text-2xl
-            font-black
-            text-blue-500
-          ">
-                        {issue.type}
-                    </h2>
-
-                    <div className={`
-            px-4
-            py-1
-            rounded-full
-            text-sm
-            font-semibold
-            text-white
-            ${statusColor[issue.status]}
-          `}>
-
+        <div 
+            onClick={handleClick}
+            className={`
+                bg-slate-900/40 border border-slate-900/80 rounded-3xl overflow-hidden shadow-xl 
+                hover:shadow-[0_10px_30px_rgba(0,0,0,0.6)] hover:border-slate-800/80 hover:scale-[1.015]
+                transition-all duration-300 flex flex-col justify-between group h-full
+                ${onViewDetails ? "cursor-pointer" : ""}
+            `}
+        >
+            {/* Visual Header */}
+            <div className="relative h-56 bg-slate-950 overflow-hidden select-none shrink-0 border-b border-slate-900/50">
+                <img
+                    src={issue.imageUrl}
+                    alt={issue.type}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                {/* Floating Status Badge */}
+                <div className="absolute top-4.5 left-4.5 z-10">
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border backdrop-blur-md ${statusColors[issue.status]}`}>
                         {issue.status}
+                    </span>
+                </div>
+                {/* Floating Road Type Badge */}
+                <div className="absolute top-4.5 right-4.5 z-10">
+                    <span className="px-3 py-1 bg-slate-950/80 text-blue-400 border border-slate-800/85 text-[10px] font-bold rounded-full backdrop-blur-md shadow-sm">
+                        {issue.roadType || "Urban Road"}
+                    </span>
+                </div>
+            </div>
 
+            {/* Information Body */}
+            <div className="p-6 flex flex-col grow justify-between">
+                <div>
+                    {/* Header Row */}
+                    <div className="flex justify-between items-start gap-4 mb-3">
+                        <h2 className="text-xl font-black text-slate-100 group-hover:text-blue-400 transition-colors duration-300">
+                            {issue.type}
+                        </h2>
                     </div>
 
+                    {/* Automatically resolve authority labels with colored badges */}
+                    <div className="flex flex-col gap-1 mb-4">
+                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Assigned Authority</span>
+                        <span className={`inline-block text-[10.5px] font-bold border px-2.5 py-0.5 rounded-lg w-max mt-0.5 ${authorityColors[issue.authority || "Municipal Corporation"]}`}>
+                            {issue.authority || "Municipal Corporation"}
+                        </span>
+                    </div>
+
+                    {/* Short Description */}
+                    <p className="text-slate-300 text-sm leading-relaxed mb-6 font-medium line-clamp-3">
+                        {issue.description}
+                    </p>
                 </div>
 
-                {/* DESCRIPTION */}
-                <p className="
-          text-slate-300
-          leading-relaxed
-          mb-5
-        ">
-
-                    {issue.description}
-
-                </p>
-
-                {/* USER INFO */}
-                <div className="
-          border-t
-          border-slate-800
-          pt-4
-          flex
-          flex-col
-          gap-3
-          text-sm
-          text-slate-400
-        ">
-
-                    <p>
-                        Reported by:
-                        {" "}
-                        <span className="text-blue-400">
+                {/* Audit details metadata */}
+                <div className="border-t border-slate-900/80 pt-4.5 flex flex-col gap-3 text-xs text-slate-400">
+                    {/* Reporter Info */}
+                    <div className="flex justify-between items-center text-[11px]">
+                        <span className="font-semibold text-slate-500">Citizen Reporter:</span>
+                        <span className="font-mono text-slate-300 bg-slate-950/40 border border-slate-900/60 px-2 py-0.5 rounded">
                             {issue.userEmail}
                         </span>
-                    </p>
+                    </div>
 
-                    <p className="flex justify-between items-center flex-wrap gap-2">
-                        <span>
-                            Coordinates:{" "}
-                            <span className="font-mono text-slate-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700/60">
+                    {/* Geo Coordinates & Map Action */}
+                    <div className="flex justify-between items-center text-[11px] flex-wrap gap-2">
+                        <span className="font-semibold text-slate-500 flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5 text-slate-600" /> Lat/Lng:
+                            <span className="font-mono text-slate-300">
                                 {issue.latitude !== undefined && issue.latitude !== null ? Number(issue.latitude).toFixed(4) : "N/A"}, {issue.longitude !== undefined && issue.longitude !== null ? Number(issue.longitude).toFixed(4) : "N/A"}
                             </span>
                         </span>
@@ -112,30 +104,23 @@ function IssueCard({ issue }) {
                                 href={`https://www.google.com/maps/search/?api=1&query=${issue.latitude},${issue.longitude}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs text-blue-400 hover:text-blue-300 font-bold transition flex items-center gap-1 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1 rounded-lg border border-blue-500/20"
+                                className="text-[10px] text-blue-400 hover:text-blue-300 font-bold transition-all flex items-center gap-1 bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-1 rounded-lg border border-blue-500/20 shadow-sm"
                             >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                </svg>
-                                Google Maps
+                                <ExternalLink className="w-3 h-3" /> Map Link
                             </a>
                         )}
-                    </p>
+                    </div>
 
-                    <p>
-                        Status:
-                        {" "}
-                        <span className="text-white">
-                            {issue.status}
+                    {/* Timestamp */}
+                    <div className="flex justify-between items-center text-[10px] text-slate-500 pt-1.5 border-t border-slate-900/30">
+                        <span className="font-bold uppercase tracking-wider">Lodged Date</span>
+                        <span className="font-semibold flex items-center gap-1">
+                            <Calendar className="w-3 h-3" /> {dateFormatted}
                         </span>
-                    </p>
-
+                    </div>
                 </div>
-
             </div>
-
         </div>
-
     );
 }
 

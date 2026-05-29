@@ -7,6 +7,7 @@ import { saveIssue } from "../services/localIssueService";
 function Report() {
     const [description, setDescription] = useState("");
     const [type, setType] = useState("Pothole");
+    const [roadType, setRoadType] = useState("Urban Road");
     const [image, setImage] = useState(null);
     const [loading, setLoading] = useState(false);
     const [user, setUser] = useState(null);
@@ -129,9 +130,21 @@ function Report() {
             const finalLat = latitude !== null ? latitude : 18.5204;
             const finalLng = longitude !== null ? longitude : 73.8567;
 
-            saveIssue({
+            // Automatically resolve authority
+            let resolvedAuthority = "Municipal Corporation";
+            if (type === "Waterlogging") {
+                resolvedAuthority = "Public Works Department";
+            } else if (type === "Broken Signal") {
+                resolvedAuthority = "Traffic Police";
+            } else if (type === "Road Crack") {
+                resolvedAuthority = "Road Maintenance Department";
+            }
+
+            await saveIssue({
                 description,
                 type,
+                roadType,
+                authority: resolvedAuthority,
                 imageUrl: compressedBase64,
                 status: "Pending",
                 userEmail: user.email,
@@ -144,6 +157,7 @@ function Report() {
 
             setDescription("");
             setType("Pothole");
+            setRoadType("Urban Road");
             setImage(null);
             // Refresh location to ensure next report gets fresh GPS reading
             detectLocation();
@@ -190,20 +204,34 @@ function Report() {
                             className="bg-slate-800 p-5 rounded-2xl h-40"
                         />
 
-                        <select
-                            value={type}
-                            onChange={(e) =>
-                                setType(e.target.value)
-                            }
-                            className="bg-slate-800 p-5 rounded-2xl"
-                        >
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-semibold text-slate-400">Incident Type</label>
+                            <select
+                                value={type}
+                                onChange={(e) => setType(e.target.value)}
+                                className="bg-slate-800 p-5 rounded-2xl border border-slate-700/40 text-slate-100 font-medium focus:outline-none focus:border-blue-500 transition"
+                            >
+                                <option>Pothole</option>
+                                <option>Waterlogging</option>
+                                <option>Broken Signal</option>
+                                <option>Road Crack</option>
+                            </select>
+                        </div>
 
-                            <option>Pothole</option>
-                            <option>Waterlogging</option>
-                            <option>Broken Signal</option>
-                            <option>Road Crack</option>
-
-                        </select>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-semibold text-slate-400">Road Type Classification</label>
+                            <select
+                                value={roadType}
+                                onChange={(e) => setRoadType(e.target.value)}
+                                className="bg-slate-800 p-5 rounded-2xl border border-slate-700/40 text-slate-100 font-medium focus:outline-none focus:border-blue-500 transition"
+                            >
+                                <option>National Highway (NH)</option>
+                                <option>State Highway (SH)</option>
+                                <option>Major District Road (MDR)</option>
+                                <option>Urban Road</option>
+                                <option>Rural Road</option>
+                            </select>
+                        </div>
 
                         {/* Premium Geolocation capture UI */}
                         <div className="bg-slate-800/40 border border-slate-800 p-5 rounded-2xl flex flex-col gap-3">

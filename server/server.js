@@ -40,10 +40,15 @@ if (isProd) {
             userEmail TEXT,
             latitude REAL,
             longitude REAL,
-            createdAt TEXT
+            createdAt TEXT,
+            roadType TEXT,
+            authority TEXT
         )
     `).then(() => {
         console.log('PostgreSQL database table verified/created.');
+        // Add columns if they do not exist
+        dbClient.query('ALTER TABLE issues ADD COLUMN IF NOT EXISTS roadType TEXT').catch(() => {});
+        dbClient.query('ALTER TABLE issues ADD COLUMN IF NOT EXISTS authority TEXT').catch(() => {});
     }).catch(err => {
         console.error('Error creating PostgreSQL table:', err.message);
     });
@@ -71,13 +76,30 @@ function initializeSQLiteDatabase() {
             userEmail TEXT,
             latitude REAL,
             longitude REAL,
-            createdAt TEXT
+            createdAt TEXT,
+            roadType TEXT,
+            authority TEXT
         )
     `, (err) => {
         if (err) {
             console.error('Error creating SQLite table:', err.message);
         } else {
             console.log('SQLite database table verified/created.');
+            // Add columns individually in case the table already existed without them
+            dbClient.run("ALTER TABLE issues ADD COLUMN roadType TEXT", (err) => {
+                if (err) {
+                    console.log("roadType column checked/already exists.");
+                } else {
+                    console.log("roadType column added successfully.");
+                }
+            });
+            dbClient.run("ALTER TABLE issues ADD COLUMN authority TEXT", (err) => {
+                if (err) {
+                    console.log("authority column checked/already exists.");
+                } else {
+                    console.log("authority column added successfully.");
+                }
+            });
         }
     });
 }
@@ -98,7 +120,9 @@ app.get('/api/issues', async (req, res) => {
                 userEmail: row.useremail, // Map lowercase back to camelCase
                 latitude: row.latitude,
                 longitude: row.longitude,
-                createdAt: row.createdat  // Map lowercase back to camelCase
+                createdAt: row.createdat,  // Map lowercase back to camelCase
+                roadType: row.roadtype,
+                authority: row.authority
             }));
             res.json(mappedRows);
         } else {
@@ -114,7 +138,7 @@ app.get('/api/issues', async (req, res) => {
 
 // POST: Create a new issue report
 app.post('/api/issues', async (req, res) => {
-    const { description, type, imageUrl, status, userEmail, latitude, longitude, createdAt } = req.body;
+    const { description, type, imageUrl, status, userEmail, latitude, longitude, createdAt, roadType, authority } = req.body;
     
     if (!description || !type || !imageUrl || !userEmail) {
         return res.status(400).json({ error: 'Missing required fields (description, type, imageUrl, userEmail).' });
@@ -124,15 +148,17 @@ app.post('/api/issues', async (req, res) => {
     const finalCreatedAt = createdAt || new Date().toISOString();
     const finalLat = latitude !== undefined ? latitude : null;
     const finalLng = longitude !== undefined ? longitude : null;
+    const finalRoadType = roadType || null;
+    const finalAuthority = authority || null;
 
     try {
         if (isProd) {
             const query = `
-                INSERT INTO issues (description, type, imageUrl, status, userEmail, latitude, longitude, createdAt)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                INSERT INTO issues (description, type, imageUrl, status, userEmail, latitude, longitude, createdAt, roadType, authority)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                 RETURNING id
             `;
-            const params = [description, type, imageUrl, finalStatus, userEmail, finalLat, finalLng, finalCreatedAt];
+            const params = [description, type, imageUrl, finalStatus, userEmail, finalLat, finalLng, finalCreatedAt, finalRoadType, finalAuthority];
             const result = await dbClient.query(query, params);
             res.status(201).json({
                 id: result.rows[0].id,
@@ -143,14 +169,16 @@ app.post('/api/issues', async (req, res) => {
                 userEmail,
                 latitude: finalLat,
                 longitude: finalLng,
-                createdAt: finalCreatedAt
+                createdAt: finalCreatedAt,
+                roadType: finalRoadType,
+                authority: finalAuthority
             });
         } else {
             const query = `
-                INSERT INTO issues (description, type, imageUrl, status, userEmail, latitude, longitude, createdAt)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO issues (description, type, imageUrl, status, userEmail, latitude, longitude, createdAt, roadType, authority)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
-            const params = [description, type, imageUrl, finalStatus, userEmail, finalLat, finalLng, finalCreatedAt];
+            const params = [description, type, imageUrl, finalStatus, userEmail, finalLat, finalLng, finalCreatedAt, finalRoadType, finalAuthority];
             dbClient.run(query, params, function(err) {
                 if (err) return res.status(500).json({ error: err.message });
                 res.status(201).json({
@@ -162,7 +190,9 @@ app.post('/api/issues', async (req, res) => {
                     userEmail,
                     latitude: finalLat,
                     longitude: finalLng,
-                    createdAt: finalCreatedAt
+                    createdAt: finalCreatedAt,
+                    roadType: finalRoadType,
+                    authority: finalAuthority
                 });
             });
         }
