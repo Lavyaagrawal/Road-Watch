@@ -21,7 +21,9 @@ import {
     Clock,
     Wrench,
     ArrowLeftRight,
-    MapPin
+    MapPin,
+    Download,
+    FileJson
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -37,6 +39,26 @@ function Admin() {
 
     // Modal Trigger
     const [selectedIssue, setSelectedIssue] = useState(null);
+
+    // DOWNLOAD SQLite DATABASE FILE
+    const handleDownloadDatabase = () => {
+        const baseUrl = import.meta.env.VITE_API_URL 
+            ? import.meta.env.VITE_API_URL.replace("/api/issues", "") 
+            : "http://localhost:5001";
+        
+        window.open(`${baseUrl}/api/issues/download-db`, "_blank");
+    };
+
+    // EXPORT ACTIVE REPORTS AS JSON FILE
+    const handleExportJSON = () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(issues, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `roadwatch_reports_${new Date().toISOString().split('T')[0]}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    };
 
     // Track active log session
     useEffect(() => {
@@ -160,30 +182,53 @@ function Admin() {
         <Layout>
             <div className="max-w-7xl mx-auto px-6 py-12 min-h-screen">
                 {/* Header */}
-                <div className="mb-12">
+                <div className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-slate-900 pb-8">
+                    <div>
+                        <motion.div 
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-semibold mb-4 animate-pulse"
+                        >
+                            <Shield className="w-3.5 h-3.5" /> Administrative Control Room
+                        </motion.div>
+                        <motion.h1 
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="text-4xl md:text-5xl font-black mb-3 bg-gradient-to-r from-white via-slate-100 to-blue-400 bg-clip-text text-transparent"
+                        >
+                            Civic Operations Manager
+                        </motion.h1>
+                        <motion.p 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="text-slate-400 max-w-xl text-sm sm:text-base"
+                        >
+                            Manage and review citizen reports, route complaint pipelines, dispatch road repair scopes, and moderate registry logs.
+                        </motion.p>
+                    </div>
+
+                    {/* Exporters and DB download buttons */}
                     <motion.div 
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-semibold mb-4 animate-pulse"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="flex flex-wrap gap-3 shrink-0"
                     >
-                        <Shield className="w-3.5 h-3.5" /> Administrative Control Room
+                        <button
+                            onClick={handleExportJSON}
+                            className="flex items-center gap-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-white text-xs font-bold px-4 py-3.5 rounded-xl shadow-md transition cursor-pointer active:scale-95"
+                        >
+                            <FileJson className="w-4 h-4 text-blue-500" /> Export JSON
+                        </button>
+                        <button
+                            onClick={handleDownloadDatabase}
+                            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white text-xs font-bold px-5 py-3.5 rounded-xl border border-blue-500/20 shadow-[0_4px_15px_rgba(37,99,235,0.25)] hover:scale-[1.02] transition-all duration-300 cursor-pointer active:scale-95"
+                        >
+                            <Download className="w-4 h-4" /> Download SQLite DB
+                        </button>
                     </motion.div>
-                    <motion.h1 
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="text-4xl md:text-5xl font-black mb-3 bg-gradient-to-r from-white via-slate-100 to-blue-400 bg-clip-text text-transparent"
-                    >
-                        Civic Operations Manager
-                    </motion.h1>
-                    <motion.p 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-slate-400 max-w-2xl text-sm sm:text-base"
-                    >
-                        Manage and review citizen reports, route complaint pipelines, dispatch road repair scopes, and moderate registry logs.
-                    </motion.p>
                 </div>
 
                 {/* Search & Toolbelt Controls */}

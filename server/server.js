@@ -256,6 +256,20 @@ app.delete('/api/issues/:id', async (req, res) => {
     }
 });
 
+// GET: Download SQLite database file
+app.get('/api/issues/download-db', (req, res) => {
+    if (isProd) {
+        return res.status(400).json({ error: 'Database download is only supported in SQLite local mode.' });
+    }
+    const dbPath = path.join(__dirname, 'roadwatch.db');
+    res.download(dbPath, 'roadwatch.db', (err) => {
+        if (err) {
+            console.error('Error downloading database file:', err);
+            res.status(500).json({ error: 'Failed to download database file.' });
+        }
+    });
+});
+
 // Start listening
 app.listen(PORT, () => {
     console.log(`RoadWatch Express API running at http://localhost:${PORT}`);
